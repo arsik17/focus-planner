@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:focus_planner/core/router/app_router.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_cubit.dart';
 import 'package:focus_planner/core/theme/theme.dart';
 import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:focus_planner/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:focus_planner/init_dependencies.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
 
   await initDependencies();
 
@@ -30,42 +32,22 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final AppRouter _appRouter;
+
   @override
   void initState() {
     super.initState();
+    _appRouter = AppRouter(userCubit: context.read<UserCubit>());
     context.read<AuthBloc>().add(AuthIsUserLoggedIn());
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Focus Planner',
       theme: AppTheme.darkThemeMode,
-      home: BlocSelector<UserCubit, UserState, bool>(
-        selector: (state) {
-          return state is UserLoggedIn;
-        },
-        builder: (context, isUserLoggedIn) {
-          if (isUserLoggedIn) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Focus Planner'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.logout),
-                    onPressed: () {
-                      context.read<AuthBloc>().add(AuthLogout());
-                    },
-                  ),
-                ],
-              ),
-              body: const Center(child: Text('Logged In!')),
-            );
-          }
-          return const SignInScreen();
-        },
-      ),
+      routerConfig: _appRouter.router,
     );
   }
 }

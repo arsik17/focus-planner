@@ -1,17 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:focus_planner/core/shared/cubits/user/user_state.dart';
 import 'package:focus_planner/core/shared/entities/user.dart';
 
-part 'user_state.dart';
-
 class UserCubit extends Cubit<UserState> {
-  UserCubit() : super(UserInitial());
+  UserCubit() : super(const UserState.initial());
 
   void updateUser(User? user) {
     if (user == null) {
-      emit(UserInitial());
+      emit(const UserState.initial());
     } else {
-      emit(UserLoggedIn(user));
+      emit(UserState.loggedIn(user: user));
     }
   }
 }

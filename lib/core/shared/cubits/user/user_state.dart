@@ -1,11 +1,10 @@
-part of 'user_cubit.dart';
+import 'package:focus_planner/core/shared/entities/user.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-@immutable
-sealed class UserState {}
+part 'user_state.freezed.dart';
 
-final class UserInitial extends UserState {}
-
-final class UserLoggedIn extends UserState {
-  final User user;
-  UserLoggedIn(this.user);
+@freezed
+sealed class UserState with _$UserState {
+  const factory UserState.initial() = UserInitial;
+  const factory UserState.loggedIn({required User user}) = UserLoggedIn;
 }

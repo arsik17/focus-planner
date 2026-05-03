@@ -4,12 +4,10 @@ import 'package:focus_planner/core/shared/widgets/loader.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
 import 'package:focus_planner/core/utils/show_snackbar.dart';
 import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:focus_planner/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:focus_planner/features/auth/presentation/widgets/auth_field.dart';
+import 'package:go_router/go_router.dart';
 
 class SignInScreen extends StatefulWidget {
-  static route() =>
-      MaterialPageRoute(builder: (context) => const SignInScreen());
   const SignInScreen({super.key});
 
   @override
@@ -90,7 +88,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(context, SignUpScreen.route());
+                      context.go('/sign-up');
                     },
                     child: RichText(
                       text: TextSpan(
