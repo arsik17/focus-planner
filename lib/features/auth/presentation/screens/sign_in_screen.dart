@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
+import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:focus_planner/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:focus_planner/features/auth/presentation/widgets/auth_field.dart';
 
@@ -51,7 +53,16 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      context.read<AuthBloc>().add(
+                        AuthSignIn(
+                          email: emailController.text.trim(),
+                          password: passwordController.text.trim(),
+                        ),
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppPallete.primaryColor,
                     foregroundColor: AppPallete.secondaryColor,
