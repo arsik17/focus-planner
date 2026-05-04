@@ -4,13 +4,14 @@ import 'package:focus_planner/core/shared/cubits/user/user_cubit.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_state.dart';
 import 'package:focus_planner/core/shared/widgets/loader.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
+import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:focus_planner/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:focus_planner/features/categories/presentation/cubit/category_state.dart';
-import 'package:focus_planner/features/categories/presentation/widgets/category_list.dart';
+import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_list_cubit.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_list_state.dart';
+import 'package:focus_planner/features/tasks/presentation/widgets/category_task_section.dart';
 import 'package:focus_planner/features/tasks/presentation/widgets/greeting_header.dart';
-import 'package:focus_planner/features/tasks/presentation/widgets/task_card.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -40,85 +41,114 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            GreetingHeader(userName: userName),
-            const SizedBox(height: 20),
-            BlocBuilder<CategoryCubit, CategoryState>(
-              builder: (context, categoryState) {
-                return BlocBuilder<TaskListCubit, TaskListState>(
-                  builder: (context, taskState) {
-                    return CategoryList(
-                      categories: categoryState.categories,
-                      selectedCategoryId: taskState.selectedCategoryId,
-                      onCategorySelected: (id) {
-                        context.read<TaskListCubit>().filterByCategory(id);
-                      },
-                    );
-                  },
-                );
-              },
+            GreetingHeader(
+              userName: userName,
+              onLogout: () => context.read<AuthBloc>().add(AuthLogout()),
             ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Today's Tasks",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () async {
+                      final cubit = context.read<TaskListCubit>();
+                      await context.push('/tasks');
+                      cubit.loadTasks();
+                    },
+                    child: const Text(
+                      'See all tasks',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppPallete.accentColor1,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
             Expanded(
               child: BlocBuilder<TaskListCubit, TaskListState>(
-                builder: (context, state) {
-                  if (state.status == TaskListStatus.loading) {
+                builder: (context, taskState) {
+                  if (taskState.status == TaskListStatus.loading) {
                     return const Loader();
                   }
 
-                  if (state.status == TaskListStatus.failure) {
+                  if (taskState.status == TaskListStatus.failure) {
                     return Center(
                       child: Text(
-                        state.errorMessage ?? 'Something went wrong',
+                        taskState.errorMessage ?? 'Something went wrong',
                         style: const TextStyle(color: Colors.white54),
                       ),
                     );
                   }
 
-                  final today = DateTime.now();
-                  var tasks = state.tasks.where((t) {
-                    if (t.dueDate == null) return false;
-                    return t.dueDate!.year == today.year &&
-                        t.dueDate!.month == today.month &&
-                        t.dueDate!.day == today.day;
-                  }).toList();
+                  return BlocBuilder<CategoryCubit, CategoryState>(
+                    builder: (context, categoryState) {
+                      final categories = categoryState.categories;
+                      final tasks = taskState.tasks;
 
-                  if (state.selectedCategoryId != null) {
-                    tasks = tasks
-                        .where(
-                            (t) => t.categoryId == state.selectedCategoryId)
-                        .toList();
-                  }
+                      final categorizedSections = categories
+                          .map((cat) {
+                            final catTasks = tasks
+                                .where((t) => t.categoryId == cat.id)
+                                .toList();
+                            return (category: cat, tasks: catTasks);
+                          })
+                          .where((section) => section.tasks.isNotEmpty)
+                          .toList();
 
-                  if (tasks.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No tasks for today',
-                        style: TextStyle(color: Colors.white38),
-                      ),
-                    );
-                  }
+                      final uncategorizedTasks =
+                          tasks.where((t) => t.categoryId == null).toList();
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: tasks.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      return TaskCard(
-                        task: tasks[index],
-                        onTap: () =>
-                            context.push('/tasks/${tasks[index].id}'),
+                      if (categorizedSections.isEmpty &&
+                          uncategorizedTasks.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No tasks yet',
+                            style: TextStyle(color: Colors.white38),
+                          ),
+                        );
+                      }
+
+                      return ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          ...categorizedSections.map((section) =>
+                              CategoryTaskSection(
+                                category: section.category,
+                                tasks: section.tasks,
+                                onTaskTap: (task) async {
+                                  final cubit =
+                                      context.read<TaskListCubit>();
+                                  await context.push('/tasks/${task.id}');
+                                  cubit.loadTasks();
+                                },
+                                onStatusToggle: (task) {
+                                  context
+                                      .read<TaskListCubit>()
+                                      .toggleTaskStatus(task);
+                                },
+                              )),
+                          if (uncategorizedTasks.isNotEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                'Uncategorized',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ),
+                            ...uncategorizedTasks.take(3).map((task) =>
+                                _buildUncategorizedTile(task)),
+                          ],
+                          const SizedBox(height: 80),
+                        ],
                       );
                     },
                   );
@@ -129,9 +159,65 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/tasks/new'),
+        onPressed: () async {
+          final cubit = context.read<TaskListCubit>();
+          await context.push('/tasks/new');
+          cubit.loadTasks();
+        },
         backgroundColor: AppPallete.accentColor1,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildUncategorizedTile(Task task) {
+    return GestureDetector(
+      onTap: () async {
+        final cubit = context.read<TaskListCubit>();
+        await context.push('/tasks/${task.id}');
+        cubit.loadTasks();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppPallete.secondaryColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () =>
+                  context.read<TaskListCubit>().toggleTaskStatus(task),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Icon(
+                  task.status == 'done'
+                      ? Icons.check_circle
+                      : Icons.circle_outlined,
+                  size: 20,
+                  color: task.status == 'done'
+                      ? AppPallete.accentColor2
+                      : Colors.white38,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                task.title,
+                style: TextStyle(
+                  color:
+                      task.status == 'done' ? Colors.white38 : Colors.white,
+                  decoration: task.status == 'done'
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
+          ],
+        ),
       ),
     );
   }
