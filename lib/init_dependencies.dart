@@ -18,10 +18,13 @@ import 'package:focus_planner/features/categories/domain/use_cases/update_catego
 import 'package:focus_planner/features/tasks/data/datasources/task_remote_data_source.dart';
 import 'package:focus_planner/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:focus_planner/features/tasks/domain/repository/task_repository.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/create_subtask.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/create_task.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/delete_subtask.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/delete_task.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/get_task_by_id.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/get_tasks.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/toggle_subtask.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/update_task.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -100,4 +103,7 @@ void _initTasks() {
   serviceLocator.registerFactory(() => CreateTask(serviceLocator()));
   serviceLocator.registerFactory(() => UpdateTask(serviceLocator()));
   serviceLocator.registerFactory(() => DeleteTask(serviceLocator()));
+  serviceLocator.registerFactory(() => CreateSubtask(serviceLocator()));
+  serviceLocator.registerFactory(() => ToggleSubtask(serviceLocator()));
+  serviceLocator.registerFactory(() => DeleteSubtask(serviceLocator()));
 }

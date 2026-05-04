@@ -4,6 +4,7 @@ import 'package:focus_planner/core/shared/cubits/user/user_cubit.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_state.dart';
 import 'package:focus_planner/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:focus_planner/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:focus_planner/features/auth/presentation/screens/splash_screen.dart';
 import 'package:focus_planner/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_detail_cubit.dart';
@@ -22,11 +23,21 @@ class AppRouter {
   AppRouter({required this.userCubit});
 
   late final GoRouter router = GoRouter(
+    initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(userCubit.stream),
     redirect: (context, state) {
       final isLoggedIn = userCubit.state is UserLoggedIn;
       final isAuthRoute = state.matchedLocation == '/sign-in' ||
           state.matchedLocation == '/sign-up';
+      final isSplash = state.matchedLocation == '/splash';
+
+      if (!userCubit.sessionChecked) {
+        return isSplash ? null : '/splash';
+      }
+
+      if (isSplash) {
+        return isLoggedIn ? '/' : '/sign-in';
+      }
 
       if (!isLoggedIn && !isAuthRoute) return '/sign-in';
       if (isLoggedIn && isAuthRoute) return '/';
@@ -35,6 +46,10 @@ class AppRouter {
     },
     routes: [
       GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
         path: '/',
         builder: (context, state) => MultiBlocProvider(
           providers: [
@@ -42,6 +57,7 @@ class AppRouter {
               create: (_) => TaskListCubit(
                 getTasks: serviceLocator(),
                 deleteTask: serviceLocator(),
+                updateTask: serviceLocator(),
               ),
             ),
             BlocProvider(
@@ -64,6 +80,7 @@ class AppRouter {
               create: (_) => TaskListCubit(
                 getTasks: serviceLocator(),
                 deleteTask: serviceLocator(),
+                updateTask: serviceLocator(),
               )..loadTasks(),
             ),
             BlocProvider(
@@ -109,6 +126,9 @@ class AppRouter {
               getTaskById: serviceLocator(),
               updateTask: serviceLocator(),
               deleteTask: serviceLocator(),
+              createSubtask: serviceLocator(),
+              toggleSubtask: serviceLocator(),
+              deleteSubtask: serviceLocator(),
             ),
             child: TaskDetailScreen(taskId: id),
           );

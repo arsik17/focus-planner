@@ -1,4 +1,5 @@
 import 'package:focus_planner/core/error/server_exception.dart';
+import 'package:focus_planner/features/tasks/data/models/subtask_model.dart';
 import 'package:focus_planner/features/tasks/data/models/task_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +23,15 @@ abstract class TaskRemoteDataSource {
     DateTime? dueDate,
   });
   Future<void> deleteTask(String id);
+  Future<SubtaskModel> createSubtask({
+    required String taskId,
+    required String title,
+  });
+  Future<SubtaskModel> toggleSubtask({
+    required String id,
+    required bool isCompleted,
+  });
+  Future<void> deleteSubtask(String id);
 }
 
 class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
@@ -129,6 +139,63 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<void> deleteTask(String id) async {
     try {
       await _client.from('tasks').delete().eq('id', id);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<SubtaskModel> createSubtask({
+    required String taskId,
+    required String title,
+  }) async {
+    try {
+      final countResponse = await _client
+          .from('subtasks')
+          .select('id')
+          .eq('task_id', taskId);
+      final sortOrder = (countResponse as List).length;
+
+      final response = await _client
+          .from('subtasks')
+          .insert({
+            'task_id': taskId,
+            'title': title,
+            'is_completed': false,
+            'sort_order': sortOrder,
+          })
+          .select()
+          .single();
+
+      return SubtaskModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<SubtaskModel> toggleSubtask({
+    required String id,
+    required bool isCompleted,
+  }) async {
+    try {
+      final response = await _client
+          .from('subtasks')
+          .update({'is_completed': isCompleted})
+          .eq('id', id)
+          .select()
+          .single();
+
+      return SubtaskModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> deleteSubtask(String id) async {
+    try {
+      await _client.from('subtasks').delete().eq('id', id);
     } catch (e) {
       throw ServerException(e.toString());
     }

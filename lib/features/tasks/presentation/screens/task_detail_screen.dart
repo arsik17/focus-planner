@@ -5,6 +5,8 @@ import 'package:focus_planner/core/theme/app_pallete.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_detail_cubit.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_detail_state.dart';
+import 'package:focus_planner/features/tasks/presentation/widgets/subtask_input.dart';
+import 'package:focus_planner/features/tasks/presentation/widgets/subtask_tile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -105,45 +107,29 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         const TextStyle(fontSize: 15, color: Colors.white60),
                   ),
                 ],
-                if (task.subtasks.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    'Subtasks (${task.subtasks.where((s) => s.isCompleted).length}/${task.subtasks.length})',
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  ...task.subtasks.map((subtask) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Icon(
-                              subtask.isCompleted
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined,
-                              size: 20,
-                              color: subtask.isCompleted
-                                  ? AppPallete.accentColor2
-                                  : Colors.white38,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              subtask.title,
-                              style: TextStyle(
-                                color: subtask.isCompleted
-                                    ? Colors.white38
-                                    : Colors.white,
-                                decoration: subtask.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
+                const SizedBox(height: 24),
+                Text(
+                  'Subtasks${task.subtasks.isNotEmpty ? ' (${task.subtasks.where((s) => s.isCompleted).length}/${task.subtasks.length})' : ''}',
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70),
+                ),
+                const SizedBox(height: 8),
+                ...task.subtasks.map((subtask) => SubtaskTile(
+                      subtask: subtask,
+                      onToggle: () => context
+                          .read<TaskDetailCubit>()
+                          .toggleSubtaskStatus(
+                              subtask.id, !subtask.isCompleted),
+                      onDelete: () => context
+                          .read<TaskDetailCubit>()
+                          .removeSubtask(subtask.id),
+                    )),
+                SubtaskInput(
+                  onSubmit: (title) =>
+                      context.read<TaskDetailCubit>().addSubtask(title),
+                ),
                 if (task.attachments.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   const Text('Attachments',
@@ -202,11 +188,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   Widget _buildStatusChips(Task task) {
     final statuses = ['todo', 'in_progress', 'done'];
-    final labels = {'todo': 'To Do', 'in_progress': 'In Progress', 'done': 'Done'};
+    final labels = {
+      'todo': 'To Do',
+      'in_progress': 'In Progress',
+      'done': 'Done',
+    };
+    final colors = {
+      'todo': Colors.blueAccent,
+      'in_progress': Colors.amber,
+      'done': AppPallete.accentColor2,
+    };
 
     return Row(
       children: statuses.map((s) {
         final isSelected = task.status == s;
+        final chipColor = colors[s]!;
         return Padding(
           padding: const EdgeInsets.only(right: 8),
           child: GestureDetector(
@@ -217,13 +213,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             },
             child: Chip(
               label: Text(labels[s]!),
-              backgroundColor:
-                  isSelected ? AppPallete.accentColor2.withValues(alpha: 0.2) : Colors.transparent,
+              backgroundColor: isSelected
+                  ? chipColor.withValues(alpha: 0.2)
+                  : Colors.transparent,
               side: BorderSide(
-                color: isSelected ? AppPallete.accentColor2 : Colors.white24,
+                color: isSelected ? chipColor : Colors.white24,
               ),
               labelStyle: TextStyle(
-                color: isSelected ? AppPallete.accentColor2 : Colors.white54,
+                color: isSelected ? chipColor : Colors.white54,
                 fontSize: 13,
               ),
             ),

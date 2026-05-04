@@ -30,9 +30,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        _logout = logout,
        _userCubit = userCubit,
        super(AuthInitial()) {
-    on<AuthEvent>((_, emit) => emit(AuthLoading()));
-
     on<AuthSignUp>((event, emit) async {
+      emit(AuthLoading());
       try {
         final user = await _userSignUp(
           UserSignUpParams(
@@ -48,6 +47,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<AuthSignIn>((event, emit) async {
+      emit(AuthLoading());
       try {
         final user = await _userSignIn(
           UserSignInParams(email: event.email, password: event.password),
@@ -59,6 +59,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<AuthLogout>((event, emit) async {
+      emit(AuthLoading());
       try {
         await _logout(NoParams());
         _userCubit.updateUser(null);
@@ -74,9 +75,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (user != null) {
           _emitAuthSuccess(user, emit);
         } else {
+          _userCubit.sessionChecked = true;
           emit(AuthInitial());
         }
       } on ServerException catch (e) {
+        _userCubit.sessionChecked = true;
         emit(AuthFailure(e.message));
       }
     });

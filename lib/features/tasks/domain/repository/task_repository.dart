@@ -1,3 +1,4 @@
+import 'package:focus_planner/features/tasks/domain/entities/subtask.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 
 abstract class TaskRepository {
@@ -20,4 +21,13 @@ abstract class TaskRepository {
     DateTime? dueDate,
   });
   Future<void> deleteTask(String id);
+  Future<Subtask> createSubtask({
+    required String taskId,
+    required String title,
+  });
+  Future<Subtask> toggleSubtask({
+    required String id,
+    required bool isCompleted,
+  });
+  Future<void> deleteSubtask(String id);
 }
