@@ -8,6 +8,13 @@ import 'package:focus_planner/features/auth/domain/use_cases/logout.dart';
 import 'package:focus_planner/features/auth/domain/use_cases/user_sign_in.dart';
 import 'package:focus_planner/features/auth/domain/use_cases/user_sign_up.dart';
 import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:focus_planner/features/categories/data/datasources/category_remote_data_source.dart';
+import 'package:focus_planner/features/categories/data/repositories/category_repository_impl.dart';
+import 'package:focus_planner/features/categories/domain/repository/category_repository.dart';
+import 'package:focus_planner/features/categories/domain/use_cases/create_category.dart';
+import 'package:focus_planner/features/categories/domain/use_cases/delete_category.dart';
+import 'package:focus_planner/features/categories/domain/use_cases/get_categories.dart';
+import 'package:focus_planner/features/categories/domain/use_cases/update_category.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,6 +22,7 @@ final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
   _initAuth();
+  _initCategories();
   await dotenv.load();
 
   final supabase = await Supabase.initialize(
@@ -52,4 +60,19 @@ void _initAuth() {
       userCubit: serviceLocator(),
     ),
   );
+}
+
+void _initCategories() {
+  serviceLocator.registerFactory<CategoryRemoteDataSource>(
+    () => CategoryRemoteDataSourceImpl(serviceLocator<SupabaseClient>()),
+  );
+
+  serviceLocator.registerFactory<CategoryRepository>(
+    () => CategoryRepositoryImpl(serviceLocator()),
+  );
+
+  serviceLocator.registerFactory(() => GetCategories(serviceLocator()));
+  serviceLocator.registerFactory(() => CreateCategory(serviceLocator()));
+  serviceLocator.registerFactory(() => UpdateCategory(serviceLocator()));
+  serviceLocator.registerFactory(() => DeleteCategory(serviceLocator()));
 }
