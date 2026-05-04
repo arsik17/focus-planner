@@ -15,6 +15,14 @@ import 'package:focus_planner/features/categories/domain/use_cases/create_catego
 import 'package:focus_planner/features/categories/domain/use_cases/delete_category.dart';
 import 'package:focus_planner/features/categories/domain/use_cases/get_categories.dart';
 import 'package:focus_planner/features/categories/domain/use_cases/update_category.dart';
+import 'package:focus_planner/features/tasks/data/datasources/task_remote_data_source.dart';
+import 'package:focus_planner/features/tasks/data/repositories/task_repository_impl.dart';
+import 'package:focus_planner/features/tasks/domain/repository/task_repository.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/create_task.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/delete_task.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/get_task_by_id.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/get_tasks.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/update_task.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +31,7 @@ final serviceLocator = GetIt.instance;
 Future<void> initDependencies() async {
   _initAuth();
   _initCategories();
+  _initTasks();
   await dotenv.load();
 
   final supabase = await Supabase.initialize(
@@ -75,4 +84,20 @@ void _initCategories() {
   serviceLocator.registerFactory(() => CreateCategory(serviceLocator()));
   serviceLocator.registerFactory(() => UpdateCategory(serviceLocator()));
   serviceLocator.registerFactory(() => DeleteCategory(serviceLocator()));
+}
+
+void _initTasks() {
+  serviceLocator.registerFactory<TaskRemoteDataSource>(
+    () => TaskRemoteDataSourceImpl(serviceLocator<SupabaseClient>()),
+  );
+
+  serviceLocator.registerFactory<TaskRepository>(
+    () => TaskRepositoryImpl(serviceLocator()),
+  );
+
+  serviceLocator.registerFactory(() => GetTasks(serviceLocator()));
+  serviceLocator.registerFactory(() => GetTaskById(serviceLocator()));
+  serviceLocator.registerFactory(() => CreateTask(serviceLocator()));
+  serviceLocator.registerFactory(() => UpdateTask(serviceLocator()));
+  serviceLocator.registerFactory(() => DeleteTask(serviceLocator()));
 }

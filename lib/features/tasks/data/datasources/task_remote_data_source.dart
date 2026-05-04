@@ -1,0 +1,136 @@
+import 'package:focus_planner/core/error/server_exception.dart';
+import 'package:focus_planner/features/tasks/data/models/task_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+abstract class TaskRemoteDataSource {
+  Future<List<TaskModel>> getTasks();
+  Future<TaskModel> getTaskById(String id);
+  Future<TaskModel> createTask({
+    required String title,
+    String? description,
+    String? categoryId,
+    required int priority,
+    DateTime? dueDate,
+  });
+  Future<TaskModel> updateTask({
+    required String id,
+    required String title,
+    String? description,
+    String? categoryId,
+    required int priority,
+    required String status,
+    DateTime? dueDate,
+  });
+  Future<void> deleteTask(String id);
+}
+
+class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
+  final SupabaseClient _client;
+
+  TaskRemoteDataSourceImpl(this._client);
+
+  @override
+  Future<List<TaskModel>> getTasks() async {
+    try {
+      final response = await _client
+          .from('tasks')
+          .select('*, categories(*), subtasks(*), attachments(*)')
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => TaskModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<TaskModel> getTaskById(String id) async {
+    try {
+      final response = await _client
+          .from('tasks')
+          .select('*, categories(*), subtasks(*), attachments(*)')
+          .eq('id', id)
+          .single();
+
+      return TaskModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<TaskModel> createTask({
+    required String title,
+    String? description,
+    String? categoryId,
+    required int priority,
+    DateTime? dueDate,
+  }) async {
+    try {
+      final userId = _client.auth.currentUser!.id;
+      final data = <String, dynamic>{
+        'user_id': userId,
+        'title': title,
+        'priority': priority,
+        'status': 'todo',
+      };
+      if (description != null) data['description'] = description;
+      if (categoryId != null) data['category_id'] = categoryId;
+      if (dueDate != null) data['due_date'] = dueDate.toIso8601String();
+
+      final response = await _client
+          .from('tasks')
+          .insert(data)
+          .select('*, categories(*), subtasks(*), attachments(*)')
+          .single();
+
+      return TaskModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<TaskModel> updateTask({
+    required String id,
+    required String title,
+    String? description,
+    String? categoryId,
+    required int priority,
+    required String status,
+    DateTime? dueDate,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'title': title,
+        'description': description,
+        'category_id': categoryId,
+        'priority': priority,
+        'status': status,
+        'due_date': dueDate?.toIso8601String(),
+      };
+
+      final response = await _client
+          .from('tasks')
+          .update(data)
+          .eq('id', id)
+          .select('*, categories(*), subtasks(*), attachments(*)')
+          .single();
+
+      return TaskModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> deleteTask(String id) async {
+    try {
+      await _client.from('tasks').delete().eq('id', id);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+}
