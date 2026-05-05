@@ -28,6 +28,12 @@ import 'package:focus_planner/features/tasks/domain/use_cases/toggle_subtask.dar
 import 'package:focus_planner/features/tasks/domain/use_cases/update_task.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/upload_attachment.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/delete_attachment.dart';
+import 'package:focus_planner/features/focus/data/datasources/focus_remote_data_source.dart';
+import 'package:focus_planner/features/focus/data/repositories/focus_repository_impl.dart';
+import 'package:focus_planner/features/focus/domain/repository/focus_repository.dart';
+import 'package:focus_planner/features/focus/domain/use_cases/create_focus_session.dart';
+import 'package:focus_planner/features/focus/domain/use_cases/end_focus_session.dart';
+import 'package:focus_planner/features/focus/domain/use_cases/get_focus_sessions.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,6 +43,7 @@ Future<void> initDependencies() async {
   _initAuth();
   _initCategories();
   _initTasks();
+  _initFocus();
   await dotenv.load();
 
   final supabase = await Supabase.initialize(
@@ -110,4 +117,18 @@ void _initTasks() {
   serviceLocator.registerFactory(() => DeleteSubtask(serviceLocator()));
   serviceLocator.registerFactory(() => UploadAttachment(serviceLocator()));
   serviceLocator.registerFactory(() => DeleteAttachment(serviceLocator()));
+}
+
+void _initFocus() {
+  serviceLocator.registerFactory<FocusRemoteDataSource>(
+    () => FocusRemoteDataSourceImpl(serviceLocator<SupabaseClient>()),
+  );
+
+  serviceLocator.registerFactory<FocusRepository>(
+    () => FocusRepositoryImpl(serviceLocator()),
+  );
+
+  serviceLocator.registerFactory(() => CreateFocusSession(serviceLocator()));
+  serviceLocator.registerFactory(() => EndFocusSession(serviceLocator()));
+  serviceLocator.registerFactory(() => GetFocusSessions(serviceLocator()));
 }

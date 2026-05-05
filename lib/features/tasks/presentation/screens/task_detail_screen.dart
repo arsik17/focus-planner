@@ -227,7 +227,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () => context.push('/focus/${task.id}'),
+                      onPressed: () => context.push(
+                        '/focus/${task.id}',
+                        extra: task.title,
+                      ),
                       icon: const Icon(Icons.timer_outlined),
                       label: const Text('Start Focus Session'),
                       style: ElevatedButton.styleFrom(

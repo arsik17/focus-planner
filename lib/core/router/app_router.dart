@@ -14,6 +14,8 @@ import 'package:focus_planner/features/tasks/presentation/screens/all_tasks_scre
 import 'package:focus_planner/features/tasks/presentation/screens/home_screen.dart';
 import 'package:focus_planner/features/tasks/presentation/screens/task_detail_screen.dart';
 import 'package:focus_planner/features/tasks/presentation/screens/task_form_screen.dart';
+import 'package:focus_planner/features/focus/presentation/cubit/focus_cubit.dart';
+import 'package:focus_planner/features/focus/presentation/screens/focus_session_screen.dart';
 import 'package:focus_planner/init_dependencies.dart';
 import 'package:go_router/go_router.dart';
 
@@ -158,6 +160,24 @@ class AppRouter {
               ),
             ],
             child: TaskFormScreen(task: task),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/focus/:taskId',
+        builder: (context, state) {
+          final taskId = state.pathParameters['taskId']!;
+          final taskTitle = state.extra as String?;
+          return BlocProvider(
+            create: (_) => FocusCubit(
+              createFocusSession: serviceLocator(),
+              endFocusSession: serviceLocator(),
+              taskId: taskId,
+            ),
+            child: FocusSessionScreen(
+              taskId: taskId,
+              taskTitle: taskTitle,
+            ),
           );
         },
       ),
