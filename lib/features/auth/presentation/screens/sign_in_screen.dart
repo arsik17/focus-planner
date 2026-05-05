@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:focus_planner/core/shared/widgets/loader.dart';
+import 'package:focus_planner/core/shared/widgets/loader.dart' show ButtonLoader;
 import 'package:focus_planner/core/theme/app_pallete.dart';
 import 'package:focus_planner/core/utils/show_snackbar.dart';
 import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
@@ -75,7 +75,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         foregroundColor: AppPallete.secondaryColor,
                       ),
                       child: state is AuthLoading
-                          ? const Loader()
+                          ? const ButtonLoader()
                           : Text(
                               'Sign In',
                               style: TextStyle(

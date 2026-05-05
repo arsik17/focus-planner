@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:focus_planner/core/shared/widgets/loader.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
 import 'package:focus_planner/core/utils/show_snackbar.dart';
 import 'package:focus_planner/features/categories/domain/entities/category.dart';
@@ -121,11 +122,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         ),
                       ),
                       child: state.status == TaskFormStatus.loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const ButtonLoader()
                           : Text(
                               _isEditing ? 'Save' : 'Create Task',
                               style: const TextStyle(
@@ -143,6 +140,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   }
 
   Widget _buildCategoryDropdown(List<Category> categories) {
+    final validId = categories.any((c) => c.id == _selectedCategoryId)
+        ? _selectedCategoryId
+        : null;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -151,7 +152,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
-          value: _selectedCategoryId,
+          value: validId,
           isExpanded: true,
           hint: const Text('Select category',
               style: TextStyle(color: Colors.white54)),

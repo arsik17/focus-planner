@@ -8,7 +8,22 @@ class Loader extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: CircularProgressIndicator.adaptive(
-        backgroundColor: AppPallete.secondaryColor,
+        backgroundColor: AppPallete.primaryColor,
+      ),
+    );
+  }
+}
+
+class ButtonLoader extends StatelessWidget {
+  const ButtonLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator.adaptive(
+        backgroundColor: AppPallete.primaryColor,
       ),
     );
   }

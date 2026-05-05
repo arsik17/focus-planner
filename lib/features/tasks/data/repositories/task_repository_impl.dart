@@ -1,4 +1,5 @@
 import 'package:focus_planner/features/tasks/data/datasources/task_remote_data_source.dart';
+import 'package:focus_planner/features/tasks/domain/entities/subtask.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/domain/repository/task_repository.dart';
 
@@ -62,5 +63,34 @@ class TaskRepositoryImpl implements TaskRepository {
   @override
   Future<void> deleteTask(String id) async {
     await _remoteDataSource.deleteTask(id);
+  }
+
+  @override
+  Future<Subtask> createSubtask({
+    required String taskId,
+    required String title,
+  }) async {
+    final model = await _remoteDataSource.createSubtask(
+      taskId: taskId,
+      title: title,
+    );
+    return model.toEntity();
+  }
+
+  @override
+  Future<Subtask> toggleSubtask({
+    required String id,
+    required bool isCompleted,
+  }) async {
+    final model = await _remoteDataSource.toggleSubtask(
+      id: id,
+      isCompleted: isCompleted,
+    );
+    return model.toEntity();
+  }
+
+  @override
+  Future<void> deleteSubtask(String id) async {
+    await _remoteDataSource.deleteSubtask(id);
   }
 }
