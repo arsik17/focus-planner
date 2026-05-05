@@ -1,4 +1,5 @@
 import 'package:focus_planner/features/tasks/data/datasources/task_remote_data_source.dart';
+import 'package:focus_planner/features/tasks/domain/entities/attachment.dart';
 import 'package:focus_planner/features/tasks/domain/entities/subtask.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/domain/repository/task_repository.dart';
@@ -92,5 +93,30 @@ class TaskRepositoryImpl implements TaskRepository {
   @override
   Future<void> deleteSubtask(String id) async {
     await _remoteDataSource.deleteSubtask(id);
+  }
+
+  @override
+  Future<Attachment> uploadAttachment({
+    required String taskId,
+    required String filePath,
+    required String fileName,
+  }) async {
+    final model = await _remoteDataSource.uploadAttachment(
+      taskId: taskId,
+      filePath: filePath,
+      fileName: fileName,
+    );
+    return model.toEntity();
+  }
+
+  @override
+  Future<void> deleteAttachment({
+    required String attachmentId,
+    required String storagePath,
+  }) async {
+    await _remoteDataSource.deleteAttachment(
+      attachmentId: attachmentId,
+      storagePath: storagePath,
+    );
   }
 }

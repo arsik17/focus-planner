@@ -35,8 +35,14 @@ class _SubtaskInputState extends State<SubtaskInput> {
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Add subtask...',
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           suffixIcon: GestureDetector(
             onTap: _submit,
             child: Container(

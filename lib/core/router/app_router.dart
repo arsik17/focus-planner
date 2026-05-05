@@ -129,6 +129,8 @@ class AppRouter {
               createSubtask: serviceLocator(),
               toggleSubtask: serviceLocator(),
               deleteSubtask: serviceLocator(),
+              uploadAttachment: serviceLocator(),
+              deleteAttachment: serviceLocator(),
             ),
             child: TaskDetailScreen(taskId: id),
           );

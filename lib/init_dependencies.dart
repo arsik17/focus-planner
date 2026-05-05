@@ -26,6 +26,8 @@ import 'package:focus_planner/features/tasks/domain/use_cases/get_task_by_id.dar
 import 'package:focus_planner/features/tasks/domain/use_cases/get_tasks.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/toggle_subtask.dart';
 import 'package:focus_planner/features/tasks/domain/use_cases/update_task.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/upload_attachment.dart';
+import 'package:focus_planner/features/tasks/domain/use_cases/delete_attachment.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -106,4 +108,6 @@ void _initTasks() {
   serviceLocator.registerFactory(() => CreateSubtask(serviceLocator()));
   serviceLocator.registerFactory(() => ToggleSubtask(serviceLocator()));
   serviceLocator.registerFactory(() => DeleteSubtask(serviceLocator()));
+  serviceLocator.registerFactory(() => UploadAttachment(serviceLocator()));
+  serviceLocator.registerFactory(() => DeleteAttachment(serviceLocator()));
 }

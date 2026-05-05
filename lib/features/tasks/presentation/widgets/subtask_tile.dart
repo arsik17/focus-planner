@@ -47,8 +47,9 @@ class SubtaskTile extends StatelessWidget {
               subtask.title,
               style: TextStyle(
                 color: subtask.isCompleted ? Colors.white38 : Colors.white,
-                decoration:
-                    subtask.isCompleted ? TextDecoration.lineThrough : null,
+                decoration: subtask.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:focus_planner/features/tasks/domain/entities/attachment.dart';
 import 'package:focus_planner/features/tasks/domain/entities/subtask.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 
@@ -30,4 +31,13 @@ abstract class TaskRepository {
     required bool isCompleted,
   });
   Future<void> deleteSubtask(String id);
+  Future<Attachment> uploadAttachment({
+    required String taskId,
+    required String filePath,
+    required String fileName,
+  });
+  Future<void> deleteAttachment({
+    required String attachmentId,
+    required String storagePath,
+  });
 }

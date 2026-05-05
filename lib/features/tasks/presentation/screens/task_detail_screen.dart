@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:focus_planner/core/shared/widgets/loader.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
+import 'package:focus_planner/features/tasks/domain/entities/attachment.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_detail_cubit.dart';
 import 'package:focus_planner/features/tasks/presentation/cubit/task_detail_state.dart';
 import 'package:focus_planner/features/tasks/presentation/widgets/subtask_input.dart';
 import 'package:focus_planner/features/tasks/presentation/widgets/subtask_tile.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class TaskDetailScreen extends StatefulWidget {
@@ -39,9 +41,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () => context.push(
-                          '/tasks/${state.task!.id}/edit',
-                          extra: state.task,
-                        ),
+                      '/tasks/${state.task!.id}/edit',
+                      extra: state.task,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
@@ -79,94 +81,153 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 Text(
                   task.title,
                   style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildStatusChips(task),
                 const SizedBox(height: 20),
-                _buildInfoRow(
-                    Icons.flag_outlined, 'Priority', _priorityLabel(task.priority)),
+                _buildPriorityRow(task.priority),
                 if (task.category != null)
                   _buildInfoRow(
-                      Icons.category_outlined, 'Category', task.category!.name),
+                    Icons.category_outlined,
+                    'Category',
+                    task.category!.name,
+                  ),
                 if (task.dueDate != null)
-                  _buildInfoRow(Icons.calendar_today, 'Due Date',
-                      DateFormat('MMM d, y').format(task.dueDate!)),
+                  _buildInfoRow(
+                    Icons.calendar_today,
+                    'Due Date',
+                    DateFormat('MMM d, y').format(task.dueDate!),
+                  ),
                 if (task.description != null &&
                     task.description!.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text('Description',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white70)),
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     task.description!,
-                    style:
-                        const TextStyle(fontSize: 15, color: Colors.white60),
+                    style: const TextStyle(fontSize: 15, color: Colors.white60),
                   ),
                 ],
                 const SizedBox(height: 24),
                 Text(
                   'Subtasks${task.subtasks.isNotEmpty ? ' (${task.subtasks.where((s) => s.isCompleted).length}/${task.subtasks.length})' : ''}',
                   style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
                 ),
                 const SizedBox(height: 8),
-                ...task.subtasks.map((subtask) => SubtaskTile(
-                      subtask: subtask,
-                      onToggle: () => context
-                          .read<TaskDetailCubit>()
-                          .toggleSubtaskStatus(
-                              subtask.id, !subtask.isCompleted),
-                      onDelete: () => context
-                          .read<TaskDetailCubit>()
-                          .removeSubtask(subtask.id),
-                    )),
+                ...task.subtasks.map(
+                  (subtask) => SubtaskTile(
+                    subtask: subtask,
+                    onToggle: () => context
+                        .read<TaskDetailCubit>()
+                        .toggleSubtaskStatus(subtask.id, !subtask.isCompleted),
+                    onDelete: () => context
+                        .read<TaskDetailCubit>()
+                        .removeSubtask(subtask.id),
+                  ),
+                ),
                 SubtaskInput(
                   onSubmit: (title) =>
                       context.read<TaskDetailCubit>().addSubtask(title),
                 ),
-                if (task.attachments.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text('Attachments',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white70)),
-                  const SizedBox(height: 8),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Attachments${task.attachments.isNotEmpty ? ' (${task.attachments.length})' : ''}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _pickImage(context),
+                      child: const Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: Colors.white54,
+                        size: 22,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (task.attachments.isNotEmpty)
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                    ),
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
                     itemCount: task.attachments.length,
                     itemBuilder: (context, index) {
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          task.attachments[index].imageUrl,
-                          fit: BoxFit.cover,
-                        ),
+                      final attachment = task.attachments[index];
+                      return Stack(
+                        children: [
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                attachment.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Container(
+                                  color: AppPallete.secondaryColor,
+                                  child: const Icon(
+                                    Icons.broken_image_outlined,
+                                    color: Colors.white24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _confirmDeleteAttachment(context, attachment),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
-                ],
                 const SizedBox(height: 32),
                 if (task.status != 'done')
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          context.push('/focus/${task.id}'),
+                      onPressed: () => context.push('/focus/${task.id}'),
                       icon: const Icon(Icons.timer_outlined),
                       label: const Text('Start Focus Session'),
                       style: ElevatedButton.styleFrom(
@@ -216,9 +277,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               backgroundColor: isSelected
                   ? chipColor.withValues(alpha: 0.2)
                   : Colors.transparent,
-              side: BorderSide(
-                color: isSelected ? chipColor : Colors.white24,
-              ),
+              side: BorderSide(color: isSelected ? chipColor : Colors.white24),
               labelStyle: TextStyle(
                 color: isSelected ? chipColor : Colors.white54,
                 fontSize: 13,
@@ -227,6 +286,45 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildPriorityRow(int priority) {
+    Color dotColor;
+    switch (priority) {
+      case 3:
+        dotColor = Colors.redAccent;
+      case 2:
+        dotColor = Colors.orangeAccent;
+      case 1:
+        dotColor = Colors.blueAccent;
+      default:
+        dotColor = Colors.white24;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          const Icon(Icons.flag_outlined, size: 18, color: Colors.white38),
+          const SizedBox(width: 8),
+          const Text('Priority', style: TextStyle(color: Colors.white38)),
+          const Spacer(),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _priorityLabel(priority),
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
     );
   }
 
@@ -258,6 +356,54 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
+  Future<void> _pickImage(BuildContext context) async {
+    final cubit = context.read<TaskDetailCubit>();
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 80,
+    );
+    if (image == null || !mounted) return;
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final ext = image.path.split('.').last;
+    final fileName = '$timestamp.$ext';
+
+    cubit.addAttachment(image.path, fileName);
+  }
+
+  void _confirmDeleteAttachment(BuildContext context, Attachment attachment) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppPallete.secondaryColor,
+        title: const Text('Delete Attachment'),
+        content: const Text('Are you sure you want to delete this attachment?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<TaskDetailCubit>().removeAttachment(
+                attachment.id,
+                attachment.fileName,
+              );
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppPallete.errorColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -276,8 +422,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               context.read<TaskDetailCubit>().removeTask();
               context.pop();
             },
-            child: const Text('Delete',
-                style: TextStyle(color: AppPallete.errorColor)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppPallete.errorColor),
+            ),
           ),
         ],
       ),

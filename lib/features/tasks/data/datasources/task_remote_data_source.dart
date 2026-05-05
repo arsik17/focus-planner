@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:focus_planner/core/error/server_exception.dart';
+import 'package:focus_planner/features/tasks/data/models/attachment_model.dart';
 import 'package:focus_planner/features/tasks/data/models/subtask_model.dart';
 import 'package:focus_planner/features/tasks/data/models/task_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -32,6 +35,15 @@ abstract class TaskRemoteDataSource {
     required bool isCompleted,
   });
   Future<void> deleteSubtask(String id);
+  Future<AttachmentModel> uploadAttachment({
+    required String taskId,
+    required String filePath,
+    required String fileName,
+  });
+  Future<void> deleteAttachment({
+    required String attachmentId,
+    required String storagePath,
+  });
 }
 
 class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
@@ -196,6 +208,50 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<void> deleteSubtask(String id) async {
     try {
       await _client.from('subtasks').delete().eq('id', id);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<AttachmentModel> uploadAttachment({
+    required String taskId,
+    required String filePath,
+    required String fileName,
+  }) async {
+    try {
+      final file = File(filePath);
+      final storagePath = '$taskId/$fileName';
+
+      await _client.storage.from('attachments').upload(storagePath, file);
+
+      final imageUrl =
+          _client.storage.from('attachments').getPublicUrl(storagePath);
+
+      final response = await _client
+          .from('attachments')
+          .insert({
+            'task_id': taskId,
+            'image_url': imageUrl,
+            'file_name': storagePath,
+          })
+          .select()
+          .single();
+
+      return AttachmentModel.fromJson(response);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> deleteAttachment({
+    required String attachmentId,
+    required String storagePath,
+  }) async {
+    try {
+      await _client.storage.from('attachments').remove([storagePath]);
+      await _client.from('attachments').delete().eq('id', attachmentId);
     } catch (e) {
       throw ServerException(e.toString());
     }
