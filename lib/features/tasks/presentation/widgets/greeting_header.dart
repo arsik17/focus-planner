@@ -3,12 +3,10 @@ import 'package:focus_planner/core/theme/app_pallete.dart';
 
 class GreetingHeader extends StatelessWidget {
   final String userName;
-  final VoidCallback onLogout;
 
   const GreetingHeader({
     super.key,
     required this.userName,
-    required this.onLogout,
   });
 
   @override
@@ -57,10 +55,6 @@ class GreetingHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                onPressed: onLogout,
-                icon: const Icon(Icons.logout, color: Colors.white38, size: 20),
               ),
             ],
           ),

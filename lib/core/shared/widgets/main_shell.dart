@@ -46,6 +46,11 @@ class MainShell extends StatelessWidget {
               activeIcon: Icon(Icons.bar_chart),
               label: 'Stats',
             ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
           ],
         ),
       ),

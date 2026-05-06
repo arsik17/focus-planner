@@ -19,6 +19,7 @@ import 'package:focus_planner/features/focus/presentation/cubit/focus_cubit.dart
 import 'package:focus_planner/features/focus/presentation/screens/focus_session_screen.dart';
 import 'package:focus_planner/features/stats/presentation/cubit/stats_cubit.dart';
 import 'package:focus_planner/features/stats/presentation/screens/stats_screen.dart';
+import 'package:focus_planner/features/profile/presentation/screens/profile_screen.dart';
 import 'package:focus_planner/init_dependencies.dart';
 import 'package:go_router/go_router.dart';
 
@@ -132,6 +133,14 @@ class AppRouter {
                   ),
                   child: const StatsScreen(),
                 ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

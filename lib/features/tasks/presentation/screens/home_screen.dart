@@ -4,7 +4,6 @@ import 'package:focus_planner/core/shared/cubits/user/user_cubit.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_state.dart';
 import 'package:focus_planner/core/shared/widgets/loader.dart';
 import 'package:focus_planner/core/theme/app_pallete.dart';
-import 'package:focus_planner/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:focus_planner/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:focus_planner/features/categories/presentation/cubit/category_state.dart';
 import 'package:focus_planner/features/tasks/domain/entities/task.dart';
@@ -41,10 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            GreetingHeader(
-              userName: userName,
-              onLogout: () => context.read<AuthBloc>().add(AuthLogout()),
-            ),
+            GreetingHeader(userName: userName),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
