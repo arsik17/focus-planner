@@ -11,6 +11,7 @@ import 'package:focus_planner/features/tasks/presentation/cubit/task_list_cubit.
 import 'package:focus_planner/features/tasks/presentation/cubit/task_list_state.dart';
 import 'package:focus_planner/features/tasks/presentation/widgets/category_task_section.dart';
 import 'package:focus_planner/features/tasks/presentation/widgets/greeting_header.dart';
+import 'package:focus_planner/features/tasks/presentation/widgets/today_tasks_section.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -42,25 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             GreetingHeader(userName: userName),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => context.go('/tasks'),
-                    child: const Text(
-                      'See all tasks',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppPallete.accentColor1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
             Expanded(
               child: BlocBuilder<TaskListCubit, TaskListState>(
                 builder: (context, taskState) {
@@ -82,6 +64,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       final categories = categoryState.categories;
                       final tasks = taskState.tasks;
 
+                      final now = DateTime.now();
+                      final todayTasks = tasks.where((t) {
+                        if (t.dueDate == null) return false;
+                        return t.dueDate!.year == now.year &&
+                            t.dueDate!.month == now.month &&
+                            t.dueDate!.day == now.day;
+                      }).toList();
+
                       final categorizedSections = categories
                           .map((cat) {
                             final catTasks = tasks
@@ -96,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           tasks.where((t) => t.categoryId == null).toList();
 
                       if (categorizedSections.isEmpty &&
-                          uncategorizedTasks.isEmpty) {
+                          uncategorizedTasks.isEmpty &&
+                          todayTasks.isEmpty) {
                         return const Center(
                           child: Text(
                             'No tasks yet',
@@ -106,38 +97,67 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       return ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.zero,
                         children: [
+                          if (todayTasks.isNotEmpty) ...[
+                            TodayTasksSection(
+                              tasks: todayTasks,
+                              onTaskTap: (task) async {
+                                final cubit =
+                                    context.read<TaskListCubit>();
+                                await context.push('/tasks/${task.id}');
+                                cubit.loadTasks();
+                              },
+                              onComplete: (task) {
+                                context
+                                    .read<TaskListCubit>()
+                                    .toggleTaskStatus(task);
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                           ...categorizedSections.map((section) =>
-                              CategoryTaskSection(
-                                category: section.category,
-                                tasks: section.tasks,
-                                onTaskTap: (task) async {
-                                  final cubit =
-                                      context.read<TaskListCubit>();
-                                  await context.push('/tasks/${task.id}');
-                                  cubit.loadTasks();
-                                },
-                                onStatusToggle: (task) {
-                                  context
-                                      .read<TaskListCubit>()
-                                      .toggleTaskStatus(task);
-                                },
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
+                                child: CategoryTaskSection(
+                                  category: section.category,
+                                  tasks: section.tasks,
+                                  onTaskTap: (task) async {
+                                    final cubit =
+                                        context.read<TaskListCubit>();
+                                    await context
+                                        .push('/tasks/${task.id}');
+                                    cubit.loadTasks();
+                                  },
+                                  onStatusToggle: (task) {
+                                    context
+                                        .read<TaskListCubit>()
+                                        .toggleTaskStatus(task);
+                                  },
+                                ),
                               )),
                           if (uncategorizedTasks.isNotEmpty) ...[
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.only(
+                                  left: 16, right: 16, bottom: 8),
                               child: Text(
                                 'Uncategorized',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color:
+                                      Colors.white.withValues(alpha: 0.5),
                                 ),
                               ),
                             ),
                             ...uncategorizedTasks.take(3).map((task) =>
-                                _buildUncategorizedTile(task)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child:
+                                      _buildUncategorizedTile(task),
+                                )),
                           ],
                           const SizedBox(height: 80),
                         ],
