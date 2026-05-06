@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_cubit.dart';
 import 'package:focus_planner/core/shared/cubits/user/user_state.dart';
+import 'package:focus_planner/core/shared/widgets/main_shell.dart';
 import 'package:focus_planner/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:focus_planner/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:focus_planner/features/auth/presentation/screens/splash_screen.dart';
@@ -16,6 +17,8 @@ import 'package:focus_planner/features/tasks/presentation/screens/task_detail_sc
 import 'package:focus_planner/features/tasks/presentation/screens/task_form_screen.dart';
 import 'package:focus_planner/features/focus/presentation/cubit/focus_cubit.dart';
 import 'package:focus_planner/features/focus/presentation/screens/focus_session_screen.dart';
+import 'package:focus_planner/features/stats/presentation/cubit/stats_cubit.dart';
+import 'package:focus_planner/features/stats/presentation/screens/stats_screen.dart';
 import 'package:focus_planner/init_dependencies.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,50 +55,87 @@ class AppRouter {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: '/',
-        builder: (context, state) => MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (_) => TaskListCubit(
-                getTasks: serviceLocator(),
-                deleteTask: serviceLocator(),
-                updateTask: serviceLocator(),
-              ),
-            ),
-            BlocProvider(
-              create: (_) => CategoryCubit(
-                getCategories: serviceLocator(),
-                createCategory: serviceLocator(),
-                updateCategory: serviceLocator(),
-                deleteCategory: serviceLocator(),
-              ),
-            ),
-          ],
-          child: const HomeScreen(),
-        ),
+        path: '/sign-in',
+        builder: (context, state) => const SignInScreen(),
       ),
       GoRoute(
-        path: '/tasks',
-        builder: (context, state) => MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (_) => TaskListCubit(
-                getTasks: serviceLocator(),
-                deleteTask: serviceLocator(),
-                updateTask: serviceLocator(),
-              )..loadTasks(),
-            ),
-            BlocProvider(
-              create: (_) => CategoryCubit(
-                getCategories: serviceLocator(),
-                createCategory: serviceLocator(),
-                updateCategory: serviceLocator(),
-                deleteCategory: serviceLocator(),
-              )..loadCategories(),
-            ),
-          ],
-          child: const AllTasksScreen(),
-        ),
+        path: '/sign-up',
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainShell(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider(
+                      create: (_) => TaskListCubit(
+                        getTasks: serviceLocator(),
+                        deleteTask: serviceLocator(),
+                        updateTask: serviceLocator(),
+                      ),
+                    ),
+                    BlocProvider(
+                      create: (_) => CategoryCubit(
+                        getCategories: serviceLocator(),
+                        createCategory: serviceLocator(),
+                        updateCategory: serviceLocator(),
+                        deleteCategory: serviceLocator(),
+                      ),
+                    ),
+                  ],
+                  child: const HomeScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/tasks',
+                builder: (context, state) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider(
+                      create: (_) => TaskListCubit(
+                        getTasks: serviceLocator(),
+                        deleteTask: serviceLocator(),
+                        updateTask: serviceLocator(),
+                      )..loadTasks(),
+                    ),
+                    BlocProvider(
+                      create: (_) => CategoryCubit(
+                        getCategories: serviceLocator(),
+                        createCategory: serviceLocator(),
+                        updateCategory: serviceLocator(),
+                        deleteCategory: serviceLocator(),
+                      )..loadCategories(),
+                    ),
+                  ],
+                  child: const AllTasksScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/stats',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => StatsCubit(
+                    getTasks: serviceLocator(),
+                    getFocusSessions: serviceLocator(),
+                  ),
+                  child: const StatsScreen(),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/tasks/new',
@@ -180,14 +220,6 @@ class AppRouter {
             ),
           );
         },
-      ),
-      GoRoute(
-        path: '/sign-in',
-        builder: (context, state) => const SignInScreen(),
-      ),
-      GoRoute(
-        path: '/sign-up',
-        builder: (context, state) => const SignUpScreen(),
       ),
     ],
   );

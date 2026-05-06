@@ -46,6 +46,7 @@ dependencies:
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
   circular_countdown_timer: ^0.2.4
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   flutter_test:

@@ -52,11 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Spacer(),
                   GestureDetector(
-                    onTap: () async {
-                      final cubit = context.read<TaskListCubit>();
-                      await context.push('/tasks');
-                      cubit.loadTasks();
-                    },
+                    onTap: () => context.go('/tasks'),
                     child: const Text(
                       'See all tasks',
                       style: TextStyle(
