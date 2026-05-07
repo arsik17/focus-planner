@@ -8,6 +8,7 @@ class CategoryTaskSection extends StatelessWidget {
   final List<Task> tasks;
   final ValueChanged<Task> onTaskTap;
   final ValueChanged<Task> onStatusToggle;
+  final VoidCallback? onChevronTap;
 
   const CategoryTaskSection({
     super.key,
@@ -15,6 +16,7 @@ class CategoryTaskSection extends StatelessWidget {
     required this.tasks,
     required this.onTaskTap,
     required this.onStatusToggle,
+    this.onChevronTap,
   });
 
   @override
@@ -31,22 +33,26 @@ class CategoryTaskSection extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    category.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+          GestureDetector(
+            onTap: onChevronTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      category.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-                const Icon(Icons.chevron_right,
-                    color: Colors.white54, size: 20),
-              ],
+                  const Icon(Icons.chevron_right,
+                      color: Colors.white54, size: 20),
+                ],
+              ),
             ),
           ),
           ...tasks.take(3).map((task) => _buildTaskTile(task)),

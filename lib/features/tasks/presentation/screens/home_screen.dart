@@ -116,6 +116,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 20),
                           ],
+                          if (categorizedSections.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Categories',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           ...categorizedSections.map((section) =>
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -134,6 +148,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context
                                         .read<TaskListCubit>()
                                         .toggleTaskStatus(task);
+                                  },
+                                  onChevronTap: () {
+                                    context.go(
+                                      '/tasks?categoryId=${section.category.id}',
+                                    );
                                   },
                                 ),
                               )),

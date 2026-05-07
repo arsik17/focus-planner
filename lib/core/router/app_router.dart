@@ -99,14 +99,19 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/tasks',
-                builder: (context, state) => MultiBlocProvider(
+                builder: (context, state) {
+                  final categoryId =
+                      state.uri.queryParameters['categoryId'];
+                  return MultiBlocProvider(
                   providers: [
                     BlocProvider(
                       create: (_) => TaskListCubit(
                         getTasks: serviceLocator(),
                         deleteTask: serviceLocator(),
                         updateTask: serviceLocator(),
-                      )..loadTasks(),
+                      )
+                        ..loadTasks()
+                        ..filterByCategory(categoryId),
                     ),
                     BlocProvider(
                       create: (_) => CategoryCubit(
@@ -118,7 +123,8 @@ class AppRouter {
                     ),
                   ],
                   child: const AllTasksScreen(),
-                ),
+                );
+                },
               ),
             ],
           ),
